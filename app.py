@@ -9,40 +9,27 @@ from flask_sqlalchemy import SQLAlchemy
 #实例化对象
 app = Flask(__name__)
 
-# 操作系统判断
-# WIN = sys.platform.startswith('win')
-# if WIN: #如果是windows系统，使用3个斜线
-#     prefix = 'sqlite:///'
-# else:   #否则使用四个斜线
-#     prefix = 'sqlite:////'
-# app.config['SQLAlCHEMY_DATABASE_URI'] = prefix + os.path.join(app.root_path,'data.db')
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////' + os.path.join(app.root_path, 'data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #关闭对模型修改的监控
 #在扩展类实例化前加载配置
 db = SQLAlchemy(app)
 
-#变量传值
-# name = 'nozilla'
-# movies = [
-#     {'title': 'My Neighbor Totoro', 'year': '1988'},
-#     {'title': 'Dead Poets Society', 'year': '1989'},
-#     {'title': 'A Perfect World', 'year': '1993'},
-#     {'title': 'Leon', 'year': '1994'},
-#     {'title': 'Mahjong', 'year': '1996'},
-#     {'title': 'Swallowtail Butterfly', 'year': '1996'},
-#     {'title': 'King of Comedy', 'year': '1999'},
-#     {'title': 'Devils on the Doorstep', 'year': '1999'},
-#     {'title': 'WALL-E', 'year': '2008'},
-#     {'title': 'The Pork of Music', 'year': '2012'},
-# ]
+#模版上下文处理函数
+@app.context_processor
+def inject_user(): #函数名可以随意更改
+    user = User.query.first()
+    return dict(user=user) #需要返回字典，等同于return{'user':user}
+
+#注册404处理函数
+@app.errorhandler(404)  # 传入要处理的错误代码
+def page_not_found(e):  # 接受异常对象作为参数
+    return render_template('404.html'), 404  # 返回模板和状态码
 
 #路由注册
 @app.route('/')
 def index():
-    user = User.query.first() #读取用户记录
     movies = Movie.query.all() #读取所有电影记录
-    return render_template('index.html',user=user,movies=movies)
+    return render_template('index.html',movies=movies)
 
 #建表操作
 class User(db.Model): #表名将会是 user（自动生成，小写处理）
